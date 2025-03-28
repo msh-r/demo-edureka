@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_BRANCH = 'main'  // Define the branch as a variable
+        REPO_URL = 'https://github.com/msh-r/demo-edureka.git'  // Set your Git repository URL
+    }
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                script {
+                    sh 'sudo rm -rf /var/lib/jenkins/workspace/${BUILD_NAME}/target/*'
+                    git branch: "${GIT_BRANCH}", url: "${REPO_URL}"
+                }
+            }
+        }
+
+        stage('Maven Compile') {
+            steps {
+                script {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
+        stage('Code Package') {
+            steps {
+                script {
+                    sh 'mvn package'
+                }
+            }
+        }
+        stage('Build Docker Image'){
+			steps{
+			    sh "cp /var/lib/jenkins/workspace/${JOB_NAME}/target/ABCtechnologies-1.0.war /var/lib/jenkins/workspace/${JOB_NAME}/ABCtechnologies-1.0.war"
+                sh 'docker ps -aq | xargs -r docker stop'
+                sh 'docker ps -aq | xargs -r docker rm'
+                sh 'docker rmi $(docker images -q)'
+                sh "docker build -t hr67/abc_tech:${BUILD_NUMBER} ."
+
+			}
+		}
+        stage('Push Docker Image'){ 
+			    steps{   
+			        withDockerRegistry([ credentialsId: "docker-creds", url: "" ]){
+			        sh "docker push hr67/abc_tech:${BUILD_NUMBER}"
+				    }
+			    }
+		}
+		stage('Deploy as container'){
+			    steps{
+				sh "docker run -itd -P hr67/abc_tech:${BUILD_NUMBER}"
+				sh "docker ps -a"
+			    }
+		    }
+
+    }
+}
