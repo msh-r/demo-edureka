@@ -20,10 +20,10 @@ COPY ABCtechnologies-1.0.war /usr/local/tomcat/webapps/
 #COPY index.html /usr/local/tomcat/webapps/ROOT/
 
 # Set correct permissions
-RUN chown -R tomcat:tomcat /usr/local/tomcat/webapps
+RUN chown -R root:root /usr/local/tomcat/webapps
 
 # Switch back to Tomcat user for security
-USER tomcat
+#USER tomcat
 
 # Expose port 8080 for Tomcat
 EXPOSE 8080
