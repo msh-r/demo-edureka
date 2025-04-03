@@ -36,7 +36,7 @@
         name: jenkins
         state: started
         enabled: yes
-        
+
     - name: Allow Jenkins through UFW (port 8080)
       ufw:
         rule: allow
@@ -51,3 +51,5 @@
     - name: Show Jenkins initial admin password
       debug:
         msg: "Jenkins Initial Admin Password: {{ jenkins_admin_password.stdout }}"
+
+

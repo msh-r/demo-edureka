@@ -1,0 +1,58 @@
+---
+- name: Install Java,Maven,Docker on CentOS Jenkins agent
+  hosts: node1.example.com
+  become: yes
+  vars:
+    ansible_user: msh
+
+  tasks:
+
+  - name: Update package index (CentOS)
+    yum:
+      name: '*'
+      state: latest
+      
+  - name: Update and upgrade system packages
+    ansible.builtin.dnf:
+      name: '*'
+      state: latest
+
+  - name: Install Java (Jenkins dependency)
+    yum:
+      name: java-17-openjdk-devel
+      state: present
+
+  - name: Install Maven (CentOS)
+    yum:
+      name: maven
+      state: present
+
+  - name: Install required packages for Docker (CentOS)
+    yum:
+      name:
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+      state: present
+
+  - name: Add Docker repo (CentOS)
+    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    args:
+      creates: /etc/yum.repos.d/docker-ce.repo
+
+  - name: Install Docker (CentOS)
+    yum:
+      name: docker-ce
+      state: present
+
+  - name: Ensure Docker service is running
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: Add current user to Docker group
+    user:
+      name: "{{ ansible_user }}"
+      groups: docker
+      append: yes
