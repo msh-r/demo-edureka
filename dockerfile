@@ -1,5 +1,5 @@
-# Use an Alpine-based Tomcat image with JDK 17
-FROM tomcat:9-jdk17-openjdk-alpine
+# Use an Alpine-based Tomcat image with JDK 11 (widely used and stable)
+FROM tomcat:9-jdk11-openjdk-alpine
 
 # Switch to root user to install dependencies (only if needed)
 USER root
