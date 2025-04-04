@@ -5,7 +5,7 @@ metadata:
   labels:
     app: my-app  # Metadata label that can be used for filtering/selecting the deployment
 spec:
-  replicas: 3  # Specifies the number of pod replicas to maintain for the application
+  replicas: 2  # Specifies the number of pod replicas to maintain for the application
   selector:
     matchLabels:
       app: my-app  # A selector to match the pods with the label `app: my-app`
@@ -21,9 +21,9 @@ spec:
           - containerPort: 8080
         resources:
           requests:
-            memory: "128Mi"  # Request 512 MiB of memory for the container
-            cpu: "100m"      # Request 500 milli-CPU for the container
+            memory: "256Mi"  # Request 256 MiB of memory for the container
+            cpu: "300m"      # Request 300 milli-CPU for the container
 
           limits:
-            memory: "256Mi"    # Limit the container to a maximum of 1 GiB of memory
-            cpu: "200m"         # Limit the container to a maximum of 1 CPU core
+            memory: "512Mi"    # Limit the container to a maximum of 512 MiB of memory
+            cpu: "400m"         # Limit the container to a maximum of 400m CPU core
