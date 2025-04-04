@@ -1,31 +1,19 @@
-# Use the latest Tomcat image
-FROM tomcat:latest
+# Use the lightweight Alpine-based Tomcat image
+FROM tomcat:11.0.5-jdk17-openjdk-alpine
 
-# Switch to root user to install dependencies
+# Switch to root user to install dependencies (only if needed)
 USER root
 
-# Install required dependencies
-RUN apt update && apt install -y wget unzip && rm -rf /var/lib/apt/lists/*
+# Install wget and unzip if necessary, then clean up to keep the image small
+RUN apk update && apk add --no-cache wget unzip && rm -rf /var/cache/apk/*
 
-# Download and extract the default Tomcat ROOT application
-RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-11/v11.0.5/bin/apache-tomcat-11.0.5.zip \
-    && unzip apache-tomcat-11.0.5.zip \
-    && mv apache-tomcat-11.0.5/webapps/ROOT /usr/local/tomcat/webapps/ \
-    && rm -rf apache-tomcat-11.0.5*
-
-# Copy your application WAR file (ABCtechnologies-1.0.war)
+# Copy your application WAR file into the webapps directory of Tomcat
 COPY ABCtechnologies-1.0.war /usr/local/tomcat/webapps/
 
-# Copy your custom index.html into ROOT without deleting existing files
-#COPY index.html /usr/local/tomcat/webapps/ROOT/
-
-# Set correct permissions
+# Set permissions for the WAR file
 RUN chown -R root:root /usr/local/tomcat/webapps
 
-# Switch back to Tomcat user for security
-#USER tomcat
-
-# Expose port 8080 for Tomcat
+# Expose port 8080 for Tomcat to listen on
 EXPOSE 8080
 
 # Start Tomcat
