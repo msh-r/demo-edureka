@@ -1,0 +1,29 @@
+apiVersion: apps/v1  # The version of the API being used (apps/v1 is the current stable version)
+kind: Deployment  # Defines the type of resource; in this case, a Deployment
+metadata:
+  name: my-app  # The name of the Deployment resource
+  labels:
+    app: my-app  # Metadata label that can be used for filtering/selecting the deployment
+spec:
+  replicas: 3  # Specifies the number of pod replicas to maintain for the application
+  selector:
+    matchLabels:
+      app: my-app  # A selector to match the pods with the label `app: my-app`
+  template:  # Describes the pod template that will be used to create the replicas
+    metadata:
+      labels:
+        app: my-app  # Apply the label to the pods created by this deployment
+    spec:
+      containers:
+      - name: my-app
+        image: hr67/abc_tech:latest
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            memory: "512Mi"  # Request 512 MiB of memory for the container
+            cpu: "500m"      # Request 500 milli-CPU for the container
+
+          limits:
+            memory: "1Gi"    # Limit the container to a maximum of 1 GiB of memory
+            cpu: "1"         # Limit the container to a maximum of 1 CPU core
