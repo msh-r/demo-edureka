@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: hr67/abc_tech:latest
+        image: docker.io/hr67/abc_tech:latest
         ports:
           - containerPort: 8080
         resources:
