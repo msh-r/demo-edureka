@@ -68,7 +68,7 @@ pipeline {
                         // Copy the files from the Jenkins agent to the master node
                         sh '''
                             ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "sudo mkdir -p /home/ubuntu/k8s && sudo chown -R ubuntu:ubuntu /home/ubuntu/k8s/"
-                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment-template.yaml
+                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment-template.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment-template.yaml
                             scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment.yaml
                             scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/service.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/service.yaml
                         '''
