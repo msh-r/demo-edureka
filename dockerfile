@@ -1,13 +1,13 @@
-# Use an Alpine-based Tomcat image with JDK 11 (widely used and stable)
-FROM tomcat:9-jdk11-openjdk-alpine
+# Use the latest Tomcat image available
+FROM tomcat:latest
 
 # Switch to root user to install dependencies (only if needed)
 USER root
 
 # Install wget and unzip if necessary, then clean up to keep the image small
-RUN apk update && apk add --no-cache wget unzip && rm -rf /var/cache/apk/*
+RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists/*
 
-# Copy your application WAR file into the webapps directory of Tomcat
+# Copy your application WAR file into the Tomcat webapps directory
 COPY ABCtechnologies-1.0.war /usr/local/tomcat/webapps/
 
 # Set permissions for the WAR file
