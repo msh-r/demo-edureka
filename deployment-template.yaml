@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: hr67/abc_tech:__TAG__
+        image: docker.io/hr67/abc_tech:__TAG__
         ports:
           - containerPort: 8080
         resources:
           requests:
-            memory: "512Mi"  # Request 512 MiB of memory for the container
-            cpu: "500m"      # Request 500 milli-CPU for the container
+            memory: "128Mi"  # Request 512 MiB of memory for the container
+            cpu: "100m"      # Request 500 milli-CPU for the container
 
           limits:
-            memory: "1Gi"    # Limit the container to a maximum of 1 GiB of memory
-            cpu: "1"         # Limit the container to a maximum of 1 CPU core
+            memory: "256Mi"    # Limit the container to a maximum of 1 GiB of memory
+            cpu: "200m"         # Limit the container to a maximum of 1 CPU core
