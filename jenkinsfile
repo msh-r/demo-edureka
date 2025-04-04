@@ -1,16 +1,22 @@
 pipeline {
-    agent any
+    agent {label 'slave'}
 
     environment {
         GIT_BRANCH = 'main'  // Define the branch as a variable
         REPO_URL = 'https://github.com/msh-r/demo-edureka.git'  // Set your Git repository URL
+        DOCKER_IMAGE = "hr67/abc_tech"  // Docker image name
+        TAG = "build-${BUILD_NUMBER}"
+        //REGISTRY = "docker.io"  // Container registry
+        KUBE_MASTER = "ubuntu@34.207.67.80"  // Your K8s master node
+        //KUBE_CONFIG_PATH = "/home/ubuntu/.kube/config"  // Path to your kubeconfig file on the master
+        
     }
 
     stages {
         stage('Git Clone') {
             steps {
                 script {
-                    sh 'sudo rm -rf /var/lib/jenkins/workspace/${BUILD_NAME}/target/*'
+                    sh 'rm -rf ${WORKSPACE}/target/*'
                     git branch: "${GIT_BRANCH}", url: "${REPO_URL}"
                 }
             }
@@ -39,27 +45,51 @@ pipeline {
         }
         stage('Build Docker Image'){
 			steps{
-			    sh "cp /var/lib/jenkins/workspace/${JOB_NAME}/target/ABCtechnologies-1.0.war /var/lib/jenkins/workspace/${JOB_NAME}/ABCtechnologies-1.0.war"
+			    sh "cp ${WORKSPACE}/target/ABCtechnologies-1.0.war ${WORKSPACE}/ABCtechnologies-1.0.war"
                 sh 'docker ps -aq | xargs -r docker stop'
                 sh 'docker ps -aq | xargs -r docker rm'
-                sh 'docker rmi $(docker images -q)'
-                sh "docker build -t hr67/abc_tech:${BUILD_NUMBER} ."
+                sh 'docker images "hr67/abc_tech*" -q | xargs -r docker rmi'
+                sh "docker build -t ${DOCKER_IMAGE}:${TAG} ."
 
 			}
 		}
         stage('Push Docker Image'){ 
 			    steps{   
-			        withDockerRegistry([ credentialsId: "docker-creds", url: "" ]){
-			        sh "docker push hr67/abc_tech:${BUILD_NUMBER}"
+			        withDockerRegistry([ credentialsId: "dockercreds", url: "" ]){
+			        sh "docker push ${DOCKER_IMAGE}:${TAG}"
 				    }
 			    }
 		}
-		stage('Deploy as container'){
-			    steps{
-				sh "docker run -itd -P hr67/abc_tech:${BUILD_NUMBER}"
-				sh "docker ps -a"
-			    }
-		    }
+		stage('Send Files from Agent to Kube Master') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'edureka3', keyFileVariable: 'SSH_KEY')]) {
+                    script {
+                        // Ensure destination directories exist on the master node
+                        // Copy the files from the Jenkins agent to the master node
+                        sh '''
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "sudo mkdir -p /home/ubuntu/k8s && sudo chown -R ubuntu:ubuntu /home/ubuntu/k8s/"
+                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment-template.yaml
+                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment.yaml
+                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/service.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/service.yaml
+                        '''
+                    }
+                }
+            }
+        }
 
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'edureka3', keyFileVariable: 'SSH_KEY')]) {
+                    script {
+                        // SSH into Kubernetes Master and run kubectl commands separately
+                        sh '''
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "sed "s|__TAG__|$TAG|g" /home/ubuntu/k8s/deployment-template.yaml > deployment.yaml"
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl apply -f /home/ubuntu/k8s/deployment.yaml"
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl apply -f /home/ubuntu/k8s/service.yaml"
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
