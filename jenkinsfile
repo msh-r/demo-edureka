@@ -7,7 +7,7 @@ pipeline {
         DOCKER_IMAGE = "hr67/abc_tech"  // Docker image name
         TAG = "build-${BUILD_NUMBER}"
         //REGISTRY = "docker.io"  // Container registry
-        KUBE_MASTER = "ubuntu@34.207.67.80"  // Your K8s master node
+        KUBE_MASTER = "ubuntu@54.163.175.175"  // Your K8s master node
         //KUBE_CONFIG_PATH = "/home/ubuntu/.kube/config"  // Path to your kubeconfig file on the master
         
     }
