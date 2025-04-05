@@ -67,10 +67,11 @@ pipeline {
                         // Ensure destination directories exist on the master node
                         // Copy the files from the Jenkins agent to the master node
                         sh '''
-                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "sudo mkdir -p /home/ubuntu/k8s && sudo chown -R ubuntu:ubuntu /home/ubuntu/k8s/"
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "mkdir -p /home/ubuntu/k8s && sudo chown -R ubuntu:ubuntu /home/ubuntu/k8s/"
                             scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment-template.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment-template.yaml
                             scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/deployment.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/deployment.yaml
                             scp -i $SSH_KEY -o StrictHostKeyChecking=no ${WORKSPACE}/service.yaml ${KUBE_MASTER}:/home/ubuntu/k8s/service.yaml
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "ls -ltra /home/ubuntu/k8s/"
                         '''
                     }
                 }
@@ -83,7 +84,12 @@ pipeline {
                     script {
                         // SSH into Kubernetes Master and run kubectl commands separately
                         sh '''
-                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "sed "s|__TAG__|$TAG|g" /home/ubuntu/k8s/deployment-template.yaml > deployment.yaml"
+                            
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} \\
+                            "sed 's|__TAG__|${TAG}|g' /home/ubuntu/k8s/deployment-template.yaml > /home/ubuntu/k8s/deployment.yaml"
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl delete deployment my-app || true"
+                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl get pods -l app=my-app -o name | xargs kubectl delete --force --grace-period=0"
+                            echo "Deleted old Deployment and pods , Running the new Deployment"
                             ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl apply -f /home/ubuntu/k8s/deployment.yaml"
                             ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${KUBE_MASTER} "kubectl apply -f /home/ubuntu/k8s/service.yaml"
                         '''
